@@ -1,0 +1,1075 @@
+PRODUCT REQUIREMENTS DOCUMENT (PRD)
+chatK — Website Chat Real-Time, Secure, dan Interaktif
+Versi: 1.0
+Tanggal: 27 Oktober 2026
+Status: Draft untuk implementasi melalui GitHub Copilot
+Bahasa produk: Indonesia (siapkan fondasi i18n agar bahasa lain dapat ditambahkan)
+Platform: Web responsif (mobile-first), desktop dan mobile browser
+Nama produk: chatK
+Tagline sementara: “More than just a chat. It’s your space.”
+
+============================================================
+0. REFERENSI DESAIN WAJIB DITINJAU
+============================================================
+
+Repositori berikut diberikan oleh pemilik proyek sebagai referensi. Baca README, lisensi, dokumentasi, contoh, dan batas penggunaan sebelum mengadopsi kode atau aset. Jangan menganggap referensi ini otomatis cocok atau kompatibel; gunakan sebagai inspirasi dan adaptasikan ke kebutuhan chatK.
+
+1. Impeccable
+   https://github.com/pbakaus/impeccable.git
+
+2. taste-skill
+   https://github.com/Leonxlnx/taste-skill.git
+
+3. ponytail
+   https://github.com/DietrichGebert/ponytail.git
+
+Catatan implementasi:
+- Lakukan review terhadap ketiga repositori sebelum menggunakannya.
+- Jangan menyalin aset, kode, atau identitas visual yang lisensinya tidak mengizinkan penggunaan.
+- Catat pola desain/UX yang diambil dan alasan penggunaannya.
+- Referensi ini tidak menggantikan kebutuhan aksesibilitas, keamanan, atau pengujian produk.
+
+============================================================
+1. RINGKASAN PRODUK
+============================================================
+
+chatK adalah aplikasi web chat modern untuk percakapan personal dan grup. Produk harus terasa cepat, nyaman, responsif, dan aman. Pengguna dapat mendaftar, mencari atau menemukan pengguna, mengirim permintaan chat 1-on-1, membuat grup, bertukar pesan real-time, berbagi media, serta mengelola pesan dan notifikasi.
+
+Aplikasi dibangun menggunakan:
+- Next.js (App Router) dan TypeScript.
+- Supabase untuk autentikasi, PostgreSQL, Realtime, dan kebijakan Row Level Security (RLS).
+- Cloudinary untuk penyimpanan/pemrosesan media gambar dan video.
+- Vercel untuk deployment dan preview environment.
+- Framer Motion untuk animasi UI.
+- Three.js untuk efek 3D yang terbatas dan opsional, bukan bagian inti dari setiap layar.
+
+PRINSIP PRODUK:
+1. Chat terasa instan, dengan state pengiriman yang jelas.
+2. Privasi dan keamanan menjadi persyaratan inti, bukan tambahan.
+3. Antarmuka tetap cepat pada perangkat menengah dan jaringan lambat.
+4. Dark mode dan light mode harus sama-sama dirancang dengan baik.
+5. Animasi membantu pemahaman dan memberi umpan balik, tidak menghambat.
+6. Fitur yang belum tersedia harus memiliki empty state atau status yang jelas, bukan tombol palsu.
+7. Aksesibilitas keyboard, kontras warna, label, dan reduced-motion harus diperhatikan.
+
+============================================================
+2. TUJUAN, NON-TUJUAN, DAN INDIKATOR SUKSES
+============================================================
+
+2.1 Tujuan
+- Pengguna bisa membuat akun dan masuk dengan aman.
+- Pengguna dapat memulai percakapan 1-on-1 melalui permintaan chat yang disetujui penerima.
+- Pengguna dapat membuat grup dan mengundang anggota.
+- Pesan teks dikirim dan diterima secara real-time.
+- Riwayat pesan tersimpan dan dapat dicari sesuai hak akses.
+- Pengguna dapat berbagi media dan mengelola pesan.
+- Pengguna mendapat status terkirim/diterima/dibaca serta status online dan mengetik.
+- Pengguna dapat memakai dark mode maupun light mode.
+- Pengalaman inti berfungsi di mobile dan desktop.
+
+2.2 Non-tujuan untuk MVP
+- Panggilan suara/video real-time.
+- Feed publik atau jejaring sosial publik.
+- Sistem pembayaran, langganan, dan iklan.
+- Bot AI yang dapat membaca pesan terenkripsi.
+- Sinkronisasi multi-device E2EE yang kompleks sebelum desain protokol dan pemulihan kunci disetujui.
+- Moderasi otomatis berbasis isi pesan yang terenkripsi end-to-end.
+- Aplikasi native iOS/Android.
+
+2.3 Indikator sukses awal
+- Pengguna baru dapat menyelesaikan registrasi dan masuk tanpa bantuan.
+- Pesan teks baru tampil pada penerima tanpa refresh manual.
+- Pesan tetap ada setelah pengguna memuat ulang halaman.
+- Pengguna yang tidak berhak tidak dapat membaca percakapan melalui API/database.
+- Pengguna dapat mengirim permintaan chat dan penerima dapat menerima atau menolaknya.
+- Tampilan dapat digunakan pada lebar 360 px sampai desktop besar.
+- Tidak ada error kritis atau kebocoran rahasia pada log.
+- Target performa awal: halaman utama interaktif secepat mungkin; ukur LCP, INP, dan CLS dengan data nyata. Jangan mengklaim target tercapai sebelum diukur.
+
+============================================================
+3. TARGET PENGGUNA DAN SKENARIO
+============================================================
+
+Target:
+- Individu yang ingin mengobrol dengan teman, keluarga, atau rekan.
+- Komunitas kecil yang membutuhkan grup.
+- Pengguna yang mengutamakan privasi dan kontrol atas media.
+- Pengguna mobile yang membutuhkan antarmuka mudah disentuh.
+
+Skenario utama:
+A. Pengguna baru mendaftar, mengatur profil, lalu masuk ke dashboard.
+B. Pengguna menemukan orang lain dan mengirim permintaan chat.
+C. Penerima menyetujui permintaan; ruang chat personal terbuka.
+D. Pengguna mengirim pesan; penerima melihatnya secara real-time.
+E. Pengguna membuat grup, menentukan nama/avatar, lalu mengundang anggota.
+F. Pengguna mengirim gambar, video, dokumen, atau voice note.
+G. Pengguna membalas, bereaksi, mengedit, atau menghapus pesan.
+H. Pengguna mencari pesan dalam percakapan yang memang boleh ia akses.
+I. Pengguna mengaktifkan dark/light mode.
+J. Pengguna membuka kembali aplikasi dan melihat riwayat percakapan.
+
+============================================================
+4. LIMA PREVIEW DESAIN WEBSITE — DITENTUKAN OLEH COPILOT
+============================================================
+
+Tujuan:
+Sebelum membangun antarmuka chatK secara penuh, buat lima preview desain website yang benar-benar berbeda dan unik. Pemilik proyek TIDAK menetapkan nama karakter, tema, palet warna, atau arah visual tertentu. GitHub Copilot harus mengeksplorasi dan menentukan sendiri kelima konsep berdasarkan kebutuhan produk, riset terhadap tiga repository referensi pada Bagian 0, praktik UI/UX modern, serta konsistensi brand chatK.
+
+Instruksi wajib untuk Copilot:
+- Jangan menganggap contoh nama atau karakter dari draft terdahulu sebagai ketentuan desain.
+- Tentukan sendiri lima konsep dengan karakter visual, komposisi layout, tipografi, palet warna, gaya komponen, dan suasana yang jelas berbeda satu sama lain.
+- Hindari membuat lima variasi yang hanya mengganti warna. Setiap preview harus menunjukkan arah desain yang sungguh berbeda, namun seluruhnya tetap cocok untuk produk chat modern yang aman, nyaman, mudah dipahami, dan responsif.
+- Berikan setiap konsep nama yang orisinal, deskripsi singkat, alasan desain, karakteristik UI, palet warna, gaya ilustrasi/karakter bila relevan, serta pendekatan animasi.
+- Gunakan tiga repository referensi sebagai bahan evaluasi, bukan sebagai alasan untuk menyalin mentah desain, kode, atau aset. Periksa README, dokumentasi, lisensi, dan batas penggunaannya terlebih dahulu.
+- Catat inspirasi dan keputusan desain secara singkat. Jangan mengklaim sudah memeriksa repository jika akses atau proses pemeriksaan belum dilakukan.
+- Semua konsep harus mengimplementasikan struktur dan kemampuan produk yang sama. Yang dibedakan adalah presentasi visual dan pengalaman interaksi, bukan aturan keamanan atau fitur inti.
+
+Persyaratan tiap preview:
+- Harus memiliki tampilan desktop dan mobile.
+- Harus mendukung Light Mode dan Dark Mode; mode System boleh disediakan sebagai opsi tambahan.
+- Tampilkan setidaknya landing/entry state atau dashboard chat, daftar percakapan, ruang chat, message composer, avatar/status, dan contoh interaksi pesan.
+- Tampilkan contoh state seperti pesan masuk, pesan terkirim, empty state, dan notifikasi secara realistis.
+- Gunakan data demo/fiktif yang tidak terhubung dengan data pengguna produksi.
+- Pastikan teks mudah dibaca, kontras memadai, navigasi jelas, dan elemen interaktif dapat digunakan dengan keyboard maupun sentuhan.
+- Gunakan Framer Motion untuk animasi UI yang bermakna dan ringan. Gunakan Three.js hanya bila memberi nilai visual yang jelas; jangan memaksakan 3D pada semua konsep.
+- Hormati prefers-reduced-motion dan sediakan fallback jika WebGL tidak tersedia.
+- Jangan memakai karakter, logo, ilustrasi, atau aset berhak cipta tanpa izin yang sesuai.
+
+Gallery dan alur evaluasi:
+1. Buat route khusus, misalnya /design-previews.
+2. Tampilkan kelima konsep dalam gallery yang mudah dibandingkan, masing-masing dengan nama, ringkasan karakter, tombol “Preview”, dan kontrol Light/Dark.
+3. Setiap konsep dapat dibuka dalam preview desktop dan mobile.
+4. Sediakan cara untuk kembali ke gallery dan membandingkan konsep tanpa kehilangan konteks.
+5. Buat ringkasan perbandingan yang mencakup keterbacaan, aksesibilitas, responsivitas, keunikan visual, performa, kesesuaian untuk aplikasi chat, dan kemudahan pengembangan.
+6. Jangan otomatis memilih konsep final atas nama pemilik proyek. Copilot boleh memberi rekomendasi beserta alasan, tetapi harus menunggu pemilik memilih sebelum menerapkan salah satu arah visual ke seluruh aplikasi.
+7. Setelah konsep dipilih, ekstrak design tokens yang konsisten untuk warna, typography, spacing, radius, shadow, motion, fokus, dan status UI.
+8. Pilihan tema pengguna harus tersimpan sesuai strategi yang ditentukan, dan pergantian tema tidak boleh menyebabkan flash warna yang salah saat halaman dimuat.
+
+Kriteria selesai:
+- Kelima preview dapat dijalankan dan dibandingkan.
+- Perbedaan kelima konsep terlihat jelas, bukan hanya variasi warna.
+- Semua konsep memiliki light/dark mode serta layout mobile/desktop.
+- Tidak ada preview yang membutuhkan data produksi.
+- Copilot melaporkan konsep yang dibuat, alasan desain, perbedaan utama, hasil pemeriksaan, dan rekomendasi tanpa mengunci pilihan final pemilik proyek.
+
+============================================================
+5. FITUR MVP DAN KRITERIA PENERIMAAN
+============================================================
+
+5.1 Autentikasi dan akun
+Fitur:
+- Registrasi email/password.
+- Login email/password.
+- OAuth Google dan GitHub bila konfigurasi provider tersedia.
+- Logout.
+- Verifikasi email dan reset password melalui Supabase Auth.
+- Profil awal: username unik, display name, avatar opsional, bio opsional.
+- Validasi form, loading state, error state, dan konfirmasi keberhasilan.
+
+Kriteria penerimaan:
+- Email tidak valid ditolak dengan pesan yang jelas.
+- Password mengikuti kebijakan minimum yang dikonfigurasi.
+- Username unik dan divalidasi di server/database.
+- Sesi dipertahankan dengan pola SSR yang aman untuk Next.js dan Supabase.
+- Route privat mengarahkan pengguna yang belum login ke halaman autentikasi.
+- Logout mengakhiri sesi dan membersihkan state sensitif dari UI.
+- OAuth hanya diaktifkan setelah callback URL dan provider dikonfigurasi.
+- Jangan pernah menyimpan password mentah atau service-role key di browser.
+
+5.2 Profil dan penemuan pengguna
+Fitur:
+- Halaman profil sendiri dan profil pengguna lain.
+- Cari pengguna berdasarkan username atau display name.
+- Avatar melalui Cloudinary atau Supabase Storage sesuai keputusan implementasi; untuk MVP media pengguna memakai Cloudinary.
+- Pengaturan status ketersediaan/privasi profil secara dasar.
+
+Kriteria penerimaan:
+- Username tidak boleh duplikat.
+- Hasil pencarian tidak membocorkan email atau data privat.
+- Batasi frekuensi pencarian untuk mengurangi penyalahgunaan.
+- Pengguna yang diblokir atau tidak dapat ditemukan sesuai pengaturan privasi tidak ditampilkan secara tidak semestinya.
+
+5.3 Permintaan chat 1-on-1
+Alur:
+1. Pengguna A mencari username pengguna B.
+2. A membuka profil B dan menekan “Minta Chat”.
+3. Sistem membuat permintaan berstatus pending.
+4. B melihat permintaan di tab Requests dan menerima notifikasi.
+5. B dapat menerima atau menolak.
+6. Jika diterima, sistem membuat/menautkan percakapan personal yang unik untuk pasangan A-B.
+7. Jika ditolak, permintaan menjadi rejected dan tidak membuka ruang chat.
+8. Pengirim tidak boleh mengirim pesan biasa ke penerima sebelum permintaan diterima.
+9. Cegah permintaan ganda untuk pasangan yang sama selama masih pending atau sudah diterima.
+10. Sediakan tindakan blokir/laporkan sebagai kontrol keselamatan dasar.
+
+Kriteria penerimaan:
+- Status valid: pending, accepted, rejected, cancelled, blocked bila diperlukan.
+- Hanya penerima yang dapat menerima/menolak; pengirim dapat membatalkan permintaan yang masih pending.
+- Penerimaan tidak membuat percakapan ganda.
+- Kebijakan database menegakkan akses, bukan hanya menyembunyikan tombol di UI.
+
+5.4 Group chat
+Fitur:
+- Membuat grup dengan nama dan avatar opsional.
+- Pembuat menjadi admin.
+- Menambahkan anggota berdasarkan pengguna yang memenuhi aturan privasi.
+- Daftar anggota, peran admin/member, keluar grup.
+- Admin dapat mengubah nama/avatar dan mengelola anggota.
+- Riwayat grup hanya dapat diakses anggota aktif sesuai kebijakan yang ditentukan.
+
+Kriteria penerimaan:
+- Hanya anggota yang dapat membaca dan mengirim pesan di grup.
+- Hanya admin yang dapat mengubah pengaturan admin-only.
+- Perubahan keanggotaan dicatat sebagai event sistem.
+- Tentukan kebijakan riwayat bagi anggota baru dan mantan anggota; default aman: anggota baru hanya mendapat akses ke pesan sesuai kebijakan eksplisit dan tidak otomatis membuka pesan lama terenkripsi.
+- Jika grup memakai E2EE, penambahan/pengeluaran anggota harus memicu rotasi distribusi kunci grup.
+
+5.5 Obrolan real-time
+Fitur:
+- Kirim/terima pesan tanpa refresh.
+- Pagination riwayat pesan, memuat pesan lama saat scroll ke atas.
+- Pengurutan stabil berdasarkan waktu server dan ID.
+- State pesan: sending, sent, delivered, read, failed.
+- Reconnect dan retry yang aman.
+- Optimistic UI dengan rollback bila gagal.
+- Pesan teks, media, event sistem, dan balasan memakai model yang konsisten.
+
+Kriteria penerimaan:
+- Pesan baru muncul pada klien penerima ketika koneksi aktif.
+- Jika jaringan terputus, UI memberi status dan mencoba reconnect.
+- Retry tidak menciptakan pesan ganda; gunakan client-generated idempotency UUID.
+- Pesan tersimpan di database dan muncul setelah reload.
+- Jangan mempercayai timestamp atau sender_id yang dikirim klien tanpa validasi server.
+- Pagination tidak menggandakan atau melewatkan pesan pada batas halaman.
+
+5.6 Status online/offline dan typing indicator
+Fitur:
+- Presence menggunakan Supabase Realtime Presence atau mekanisme setara.
+- Typing indicator per percakapan.
+- Status last seen dapat disembunyikan melalui pengaturan privasi.
+- Event typing tidak disimpan sebagai pesan permanen.
+
+Kriteria penerimaan:
+- Status online bersifat perkiraan berdasarkan koneksi/heartbeat, bukan jaminan pengguna sedang aktif.
+- Typing indicator kedaluwarsa otomatis setelah beberapa detik atau saat pengguna berhenti mengetik.
+- Event typing hanya terlihat oleh anggota percakapan yang berhak.
+- Batasi frekuensi event typing untuk mengurangi beban.
+- Jangan membuat status online palsu jika klien offline.
+
+5.7 Riwayat, reply, edit, hapus, dan reaksi
+Fitur:
+- Riwayat disimpan otomatis.
+- Reply/quote ke pesan tertentu.
+- Edit pesan milik sendiri dalam batas kebijakan produk.
+- Hapus pesan sendiri; tentukan apakah “hapus untuk saya” dan “hapus untuk semua” tersedia.
+- Reaksi emoji pada pesan.
+- Menu tindakan pesan dengan keyboard dan sentuhan.
+- Event edit/hapus disinkronkan ke semua anggota yang berhak.
+
+Kriteria penerimaan:
+- Hanya pengirim atau role yang berwenang yang dapat mengedit/menghapus.
+- Simpan edited_at dan deleted_at atau tombstone yang sesuai.
+- Jangan menghapus jejak audit keamanan yang diperlukan.
+- Reply ke pesan yang dihapus menampilkan placeholder yang aman.
+- Reaksi unik per pengguna/pesan/emoji, kecuali desain mengizinkan jumlah lebih dari satu.
+- Tentukan aturan edit/hapus pada E2EE dan multi-device sebelum implementasi.
+
+5.8 Berbagi media
+Jenis:
+- Gambar.
+- Video.
+- Dokumen dengan allowlist tipe dan batas ukuran.
+- Voice note/rekaman audio.
+- Preview dan status upload.
+- Pengiriman media sekali lihat.
+- Voice note sekali lihat.
+
+Teknis:
+- Upload melalui alur aman ke Cloudinary.
+- Untuk upload bertanda tangan, signature dibuat pada server menggunakan secret yang tidak pernah dikirim ke browser.
+- Validasi tipe file, ukuran, durasi audio/video, serta dimensi bila relevan.
+- Batasi tipe berbahaya; jangan mengeksekusi file yang diunggah.
+- Gunakan URL yang tidak mudah ditebak dan kontrol akses yang sesuai.
+- Jangan menganggap URL privat hanya karena sulit ditebak.
+- Simpan metadata seperlunya di database, bukan file biner di PostgreSQL.
+- Tentukan kebijakan retensi, penghapusan, dan biaya penyimpanan.
+
+Sekali lihat:
+- Pengirim harus diberi penjelasan bahwa media hanya dapat dibuka satu kali sesuai aturan produk.
+- Penerima hanya dapat membuka media sekali pada akun/perangkat sesuai kebijakan yang dipilih.
+- Setelah dibuka, status berubah secara atomik menjadi opened/consumed dan tidak dapat dibuka ulang.
+- Gunakan operasi server/database yang atomik untuk mencegah dua permintaan membuka media secara bersamaan.
+- URL media biasa tidak boleh tetap dapat diakses tanpa batas setelah media dikonsumsi.
+- Jangan menjanjikan pencegahan screenshot atau perekaman layar; aplikasi web tidak dapat menjamin hal tersebut.
+- Tentukan waktu kedaluwarsa, misalnya 24 jam setelah pengiriman, melalui konfigurasi produk.
+- Jika E2EE diwajibkan untuk media, enkripsi file di sisi klien sebelum upload dan simpan ciphertext saja di Cloudinary. Kunci tidak boleh berada pada URL atau database dalam bentuk terbuka.
+
+Voice note:
+- Pengguna merekam, mendengarkan preview, membatalkan, atau mengirim.
+- Minta izin mikrofon hanya saat pengguna memulai perekaman.
+- Tampilkan durasi, state merekam, dan indikator upload.
+- Tangani browser tanpa dukungan MediaRecorder.
+- Sekali lihat mengikuti mekanisme konsumsi yang sama dengan media sekali lihat.
+
+5.9 Notifikasi
+Fitur:
+- Toast/pop-up saat pesan masuk ketika tab tidak aktif.
+- Notifikasi internal untuk permintaan chat dan undangan grup.
+- Bunyi opsional dengan kontrol mute.
+- Web Push dapat dipertimbangkan setelah MVP; toast dalam aplikasi tidak sama dengan push notification browser.
+- Jangan menampilkan isi pesan sensitif di notifikasi jika pengguna mengaktifkan mode privasi.
+
+Kriteria penerimaan:
+- Notifikasi tidak muncul untuk event yang tidak berhak dilihat pengguna.
+- Pesan pada percakapan yang sedang aktif tidak memunculkan toast yang mengganggu secara berlebihan.
+- Permintaan izin browser hanya dilakukan setelah ada konteks dan tindakan pengguna.
+- Kegagalan izin tidak menghalangi fungsi chat.
+- Pengguna dapat mengatur preferensi notifikasi.
+
+5.10 Read receipts
+Fitur:
+- Status sent: pesan berhasil diterima server.
+- Status delivered: pesan telah diterima/tersinkronisasi pada perangkat penerima sesuai definisi implementasi.
+- Status read: penerima membuka percakapan dan pesan melewati aturan penandaan terbaca.
+- Pengaturan privasi untuk read receipts dapat ditambahkan sebagai preferensi.
+
+Kriteria penerimaan:
+- Definisi sent/delivered/read dijelaskan dalam UI atau dokumentasi.
+- Jangan menyamakan sent dengan delivered.
+- Penandaan read harus diperiksa otorisasi dan hanya berlaku pada pesan dalam percakapan yang diikuti.
+- Perbarui indikator tanpa refresh.
+
+5.11 Pencarian pesan
+Fitur:
+- Pencarian kata kunci dalam riwayat percakapan yang dapat diakses.
+- Hasil menampilkan cuplikan aman, tanggal, dan tautan ke pesan.
+- Filter berdasarkan percakapan atau rentang waktu dapat menyusul.
+
+Kriteria penerimaan:
+- Query selalu dibatasi oleh membership dan RLS.
+- Batasi ukuran hasil dan debounce input.
+- Jangan memasukkan konten pesan ke analytics/log.
+- Jika pesan E2EE, server tidak dapat melakukan pencarian teks biasa atas plaintext. Implementasikan pencarian lokal pada pesan yang telah didekripsi di perangkat atau tandai sebagai batasan fitur. Jangan melemahkan E2EE untuk memudahkan pencarian.
+
+============================================================
+6. KEAMANAN DAN END-TO-END ENCRYPTION (E2EE)
+============================================================
+
+E2EE adalah persyaratan besar yang harus dirancang secara eksplisit. HTTPS, Supabase RLS, atau enkripsi database saat tersimpan bukan E2EE. Pada E2EE yang benar, hanya perangkat peserta percakapan yang memiliki kunci untuk mendekripsi isi pesan/media. Server, administrator database, dan penyedia storage tidak boleh dapat membaca plaintext.
+
+Persyaratan:
+- Jangan membuat algoritma kriptografi sendiri.
+- Pilih protokol/library E2EE yang telah ditinjau dan masih dipelihara; lakukan threat modeling dan review keamanan sebelum produksi.
+- Enkripsi dan dekripsi pesan dilakukan di klien.
+- Server hanya menyimpan ciphertext, metadata minimum, dan envelope/metadata kunci yang memang dibutuhkan protokol.
+- Kunci privat tidak pernah dikirim ke Supabase, Cloudinary, atau log.
+- Kunci tidak boleh disimpan di localStorage dalam bentuk plaintext. Tentukan strategi penyimpanan perangkat, passphrase/pemulihan, rotasi, dan kehilangan perangkat.
+- Validasi identitas/kunci pengguna dan rencanakan perubahan perangkat.
+- Untuk grup, tentukan protokol distribusi dan rotasi kunci saat anggota ditambahkan/dikeluarkan.
+- Media dan voice note E2EE dienkripsi di sisi klien sebelum diunggah.
+- Notifikasi tidak boleh membocorkan plaintext secara default.
+- Backup, ekspor, pencarian, dan pemulihan harus dijelaskan kepada pengguna.
+
+Keputusan produk wajib sebelum implementasi E2EE:
+1. Apakah E2EE wajib sejak rilis pertama atau diluncurkan bertahap?
+2. Protokol/library yang akan digunakan dan review keamanannya.
+3. Strategi identitas perangkat dan verifikasi kunci.
+4. Pemulihan kunci jika perangkat hilang.
+5. Dukungan beberapa perangkat.
+6. E2EE grup dan rotasi kunci.
+7. Dampak E2EE terhadap pencarian, notifikasi, laporan penyalahgunaan, dan moderasi.
+
+Rekomendasi rilis:
+- Jangan mengklaim “E2EE aman” hanya karena ciphertext sederhana atau enkripsi buatan sendiri.
+- Pisahkan proof-of-concept dari produksi.
+- Jika protokol yang layak belum dipilih, buat antarmuka dan skema yang siap untuk ciphertext, tetapi jangan mengiklankan E2EE sebagai fitur yang sudah aktif.
+- Lakukan review keamanan independen sebelum menyatakan E2EE siap produksi.
+
+============================================================
+7. ALUR PENGGUNA END-TO-END
+============================================================
+
+7.1 Pengguna baru
+Landing page
+→ pilih Daftar
+→ isi email/password atau OAuth
+→ verifikasi email bila diwajibkan
+→ buat username dan display name
+→ unggah avatar opsional
+→ masuk ke dashboard
+→ tampilkan onboarding singkat dan empty state
+→ pengguna dapat mencari teman, menerima permintaan, atau membuat grup.
+
+7.2 Login kembali
+Buka aplikasi
+→ periksa sesi melalui mekanisme Supabase SSR
+→ jika sesi valid, buka dashboard
+→ jika sesi tidak valid, tampilkan login
+→ setelah login, muat profil, daftar room, permintaan pending, dan notifikasi sesuai hak akses.
+
+7.3 Permintaan chat personal
+Dashboard
+→ Cari pengguna
+→ pilih hasil
+→ lihat profil
+→ tekan Minta Chat
+→ validasi diri sendiri, blokir, duplikasi, dan status hubungan
+→ buat permintaan pending
+→ tampilkan konfirmasi
+→ penerima mendapat permintaan
+→ penerima menerima/menolak
+→ jika diterima, buat atau ambil conversation yang unik
+→ kedua pengguna melihat room personal.
+
+7.4 Mengirim pesan
+Buka room
+→ muat halaman pesan terbaru
+→ pengguna menulis pesan
+→ validasi panjang/isi dan status keanggotaan
+→ bila E2EE aktif, enkripsi di perangkat
+→ buat client_message_id
+→ tampilkan optimistic bubble berstatus sending
+→ kirim ke server/database
+→ server memverifikasi sesi dan membership
+→ simpan pesan/ciphertext
+→ status sent
+→ Realtime mengirim event ke peserta lain
+→ penerima menerima pesan dan status delivered sesuai definisi
+→ penerima membuka pesan
+→ status read diperbarui
+→ UI kedua pihak disinkronkan.
+Jika gagal:
+→ status failed
+→ tampilkan opsi coba lagi
+→ retry memakai idempotency key yang sama agar tidak duplikat.
+
+7.5 Mengirim media
+Pilih lampiran
+→ pilih gambar/video/dokumen atau rekam voice note
+→ validasi ukuran, tipe, dan izin
+→ tampilkan preview
+→ bila E2EE aktif, enkripsi file pada klien
+→ minta upload signature/otorisasi server
+→ upload ke Cloudinary
+→ simpan metadata media dan referensi pesan
+→ kirim pesan
+→ penerima mendapat event real-time
+→ tampilkan preview/unduh sesuai tipe dan izin.
+Jika upload gagal, jangan membuat pesan final yang menunjuk file tidak lengkap; sediakan retry atau batalkan upload.
+
+7.6 Media sekali lihat
+Pilih “Sekali lihat”
+→ jelaskan aturan kepada pengirim
+→ upload media dengan kebijakan akses yang sesuai
+→ simpan status available dan expires_at
+→ penerima menekan Buka
+→ server melakukan pemeriksaan akses dan konsumsi atomik
+→ jika belum dikonsumsi, berikan akses sementara yang terbatas
+→ klien menampilkan media
+→ tandai opened/consumed
+→ percobaan kedua ditolak dengan pesan “Media sudah dibuka”
+→ setelah masa retensi, hapus/invalidasi media sesuai kebijakan.
+Catatan: tidak menjamin screenshot atau perekaman layar tidak terjadi.
+
+7.7 Membuat grup
+Dashboard
+→ Buat grup
+→ masukkan nama/avatar
+→ pilih anggota
+→ konfirmasi
+→ server membuat conversation bertipe group dan membership
+→ pembuat menjadi admin
+→ tampilkan room grup
+→ anggota dapat mengirim pesan sesuai aturan
+→ event anggota bergabung/keluar ditampilkan sebagai event sistem.
+
+7.8 Edit/hapus/reply/reaksi
+Tekan menu pesan
+→ pilih tindakan yang sesuai izin
+→ untuk edit, tampilkan editor inline dan tombol simpan/batal
+→ untuk hapus, minta konfirmasi bila diperlukan
+→ untuk reply, tampilkan quote referensi
+→ untuk reaksi, pilih emoji
+→ server memvalidasi kepemilikan/membership
+→ database menyimpan perubahan
+→ Realtime memperbarui semua klien yang berhak.
+
+7.9 Pencarian
+Buka pencarian room
+→ ketik kata kunci
+→ debounce
+→ jalankan pencarian dalam batas otorisasi
+→ tampilkan hasil dan konteks
+→ pilih hasil
+→ lompat ke pesan terkait.
+Jika E2EE, lakukan pencarian lokal pada cache/riwayat yang didekripsi atau jelaskan keterbatasannya.
+
+7.10 Logout
+Buka menu akun
+→ pilih Logout
+→ akhiri sesi Supabase
+→ hapus state UI/cache sensitif sesuai kebijakan
+→ kembali ke landing/login
+→ pastikan route privat tidak dapat dibuka tanpa sesi.
+
+============================================================
+8. INFORMASI ARSITEKTUR DAN TEKNOLOGI
+============================================================
+
+Frontend:
+- Next.js App Router dengan TypeScript.
+- React Server Components untuk data yang cocok; Client Components hanya untuk interaksi, Realtime, media, dan state browser.
+- Gunakan validasi skema (misalnya Zod) pada batas input.
+- Form dengan validasi aksesibel dan error message yang jelas.
+- Framer Motion untuk transisi dan micro-interaction.
+- Three.js hanya pada area dekoratif tertentu; lazy-load, sediakan fallback dan matikan/kurangi efek untuk prefers-reduced-motion.
+- Gunakan komponen reusable, design tokens, dan batas fitur/domain yang jelas.
+
+Backend:
+- Supabase Auth untuk sesi dan OAuth.
+- PostgreSQL untuk profil, percakapan, membership, pesan, permintaan chat, reaksi, notifikasi, dan metadata media.
+- Supabase Realtime untuk event pesan, presence, typing, dan status pesan sesuai kemampuan/arsitektur terpilih.
+- RLS wajib di semua tabel yang berisi data pengguna.
+- Operasi sensitif (menerima permintaan, mengonsumsi media sekali lihat, mengubah membership) harus atomik dan diperiksa di server/database.
+- Jangan mengandalkan filter frontend sebagai mekanisme keamanan.
+
+Media:
+- Cloudinary untuk file media dan transformasi.
+- Upload signed harus menggunakan endpoint/server action yang memvalidasi sesi, membership, tipe file, dan ukuran.
+- API secret Cloudinary hanya di server.
+- Simpan public_id, resource_type, format, ukuran, durasi/dimensi bila diperlukan, uploader_id, dan referensi pesan; hindari menyimpan metadata berlebihan.
+- Untuk media privat/sekali lihat, rancang signed URL/token berumur pendek atau mekanisme kontrol akses lain yang benar-benar sesuai dengan konfigurasi Cloudinary. Uji bahwa URL lama tidak tetap memberi akses tanpa batas.
+
+Deployment:
+- Vercel untuk production, preview, dan development.
+- Variabel environment dipisah per environment.
+- Supabase development/staging dan production sebaiknya dipisahkan.
+- Atur domain, OAuth callback, redirect URL, dan CORS/allowed origins.
+- Migrasi database harus masuk version control.
+- Jangan menjalankan migrasi destruktif otomatis tanpa backup/review.
+
+============================================================
+9. RANCANGAN DATA (DRAFT)
+============================================================
+
+Skema final harus disesuaikan dengan protokol E2EE dan direview sebelum migrasi dibuat. Gunakan UUID, foreign key, index, constraints, dan timestamp server. Semua tabel di bawah harus memiliki kebijakan akses yang terdokumentasi.
+
+9.1 profiles
+- id UUID PRIMARY KEY, referensi auth.users.id
+- username TEXT UNIQUE NOT NULL
+- display_name TEXT NOT NULL
+- avatar_public_id TEXT NULL
+- avatar_url/transform reference TEXT NULL bila sesuai kebijakan
+- bio TEXT NULL
+- theme_preference TEXT CHECK light/dark/system
+- created_at TIMESTAMPTZ
+- updated_at TIMESTAMPTZ
+- privacy_settings JSONB terbatas dan tervalidasi atau kolom eksplisit
+
+9.2 conversations
+- id UUID PRIMARY KEY
+- type TEXT CHECK ('direct','group')
+- title TEXT NULL
+- avatar_public_id TEXT NULL
+- created_by UUID
+- created_at TIMESTAMPTZ
+- updated_at TIMESTAMPTZ
+- last_message_at TIMESTAMPTZ NULL
+- direct_pair_key TEXT UNIQUE untuk mencegah percakapan direct ganda; bentuk pasangan harus kanonis dan aman
+Catatan: pastikan constraint hanya berlaku untuk direct dan implementasikan dengan unique index parsial atau desain setara.
+
+9.3 conversation_members
+- conversation_id UUID
+- user_id UUID
+- role TEXT CHECK ('admin','member')
+- joined_at TIMESTAMPTZ
+- left_at TIMESTAMPTZ NULL
+- last_read_message_id UUID NULL
+- notification_muted BOOLEAN DEFAULT false
+- PRIMARY KEY yang sesuai untuk keanggotaan aktif dan riwayat membership.
+Kebijakan keanggotaan perlu mendukung leave/rejoin tanpa menghapus jejak secara tidak sengaja.
+
+9.4 chat_requests
+- id UUID PRIMARY KEY
+- sender_id UUID
+- recipient_id UUID
+- status TEXT CHECK ('pending','accepted','rejected','cancelled','blocked')
+- created_at TIMESTAMPTZ
+- responded_at TIMESTAMPTZ NULL
+- conversation_id UUID NULL
+- UNIQUE/constraint untuk mencegah request pending duplikat sesuai aturan bisnis.
+- sender_id tidak boleh sama dengan recipient_id.
+
+9.5 messages
+- id UUID PRIMARY KEY
+- client_message_id UUID untuk idempotency
+- conversation_id UUID
+- sender_id UUID
+- message_type TEXT CHECK ('text','image','video','document','voice','system')
+- body_ciphertext TEXT/BYTEA NULL bila E2EE aktif
+- body_plaintext TEXT NULL hanya jika mode non-E2EE memang diputuskan dan dijelaskan
+- encryption_version TEXT NULL
+- reply_to_message_id UUID NULL
+- created_at TIMESTAMPTZ berdasarkan server
+- edited_at TIMESTAMPTZ NULL
+- deleted_at TIMESTAMPTZ NULL
+- expires_at TIMESTAMPTZ NULL untuk pesan sementara jika diperlukan
+- delivery/read status sebaiknya dimodelkan secara terpisah jika status per penerima diperlukan.
+Jangan simpan plaintext bersamaan dengan ciphertext tanpa alasan dan threat model yang disetujui.
+
+9.6 message_receipts
+- message_id UUID
+- user_id UUID
+- delivered_at TIMESTAMPTZ NULL
+- read_at TIMESTAMPTZ NULL
+- PRIMARY KEY (message_id, user_id)
+Gunakan kebijakan yang mencegah pengguna mengubah receipt milik orang lain.
+
+9.7 message_reactions
+- id UUID PRIMARY KEY atau composite key
+- message_id UUID
+- user_id UUID
+- emoji TEXT
+- created_at TIMESTAMPTZ
+- UNIQUE (message_id, user_id, emoji)
+
+9.8 media_assets
+- id UUID PRIMARY KEY
+- owner_id UUID
+- conversation_id UUID
+- cloudinary_public_id TEXT
+- resource_type TEXT
+- format TEXT
+- byte_size BIGINT
+- duration_ms BIGINT NULL
+- width INTEGER NULL
+- height INTEGER NULL
+- visibility_mode TEXT CHECK ('normal','view_once')
+- status TEXT CHECK ('uploading','available','opened','consumed','expired','failed')
+- expires_at TIMESTAMPTZ NULL
+- consumed_at TIMESTAMPTZ NULL
+- created_at TIMESTAMPTZ
+Jangan simpan secret, signature jangka panjang, atau kunci enkripsi plaintext pada tabel ini.
+
+9.9 notifications
+- id UUID PRIMARY KEY
+- user_id UUID
+- type TEXT
+- reference_id UUID NULL
+- read_at TIMESTAMPTZ NULL
+- created_at TIMESTAMPTZ
+- metadata JSONB yang tidak memuat konten privat berlebihan
+
+9.10 blocks_reports (opsi keselamatan MVP)
+- id UUID PRIMARY KEY
+- reporter_id UUID
+- target_user_id UUID
+- reason_code TEXT
+- created_at TIMESTAMPTZ
+- status TEXT
+Simpan laporan dengan akses terbatas dan tanpa mengklaim staf dapat membaca pesan E2EE.
+
+Index penting:
+- messages(conversation_id, created_at DESC, id DESC)
+- conversation_members(user_id, conversation_id)
+- chat_requests(recipient_id, status, created_at DESC)
+- profiles(username)
+- notifications(user_id, read_at, created_at DESC)
+- message_reactions(message_id)
+- media_assets(conversation_id, status, expires_at)
+Sesuaikan index berdasarkan query nyata dan EXPLAIN ANALYZE.
+
+============================================================
+10. RLS DAN KEAMANAN DATA
+============================================================
+
+Buat matriks akses dan uji setiap tabel. Contoh prinsip kebijakan:
+- profiles: pengguna dapat mengubah profil sendiri; pembacaan profil publik dibatasi pada kolom yang memang boleh terlihat.
+- conversations: hanya anggota aktif yang dapat membaca detail percakapan.
+- conversation_members: anggota hanya dapat melihat daftar anggota sesuai kebijakan; hanya admin dapat mengubah membership grup.
+- chat_requests: pengirim dan penerima terkait dapat melihat; hanya penerima dapat accept/reject; pengirim dapat cancel pending.
+- messages: hanya anggota percakapan yang berhak dapat membaca; pengiriman hanya dari user terautentikasi yang menjadi anggota aktif; sender_id harus sesuai auth.uid().
+- receipts: pengguna hanya boleh memperbarui receipt dirinya sendiri melalui alur yang tervalidasi.
+- reactions: hanya anggota percakapan dapat membuat/menghapus reaksinya sendiri.
+- media_assets: hanya pemilik/anggota percakapan yang sah dapat meminta akses; media view-once harus melalui operasi atomik.
+- notifications: hanya pemilik notifikasi yang dapat membaca/menandai terbaca.
+- service role key hanya digunakan di server dan tidak pernah menjadi NEXT_PUBLIC_*.
+
+Tambahan:
+- Validasi seluruh input di server, bukan hanya browser.
+- Rate limit login, pembuatan permintaan, pencarian, pengiriman pesan, dan upload.
+- Lindungi dari spam, impersonasi, IDOR, XSS, file berbahaya, dan kebocoran token.
+- Jangan memasukkan token, isi pesan, secret, atau kunci ke log/analytics.
+- Terapkan Content Security Policy dan security headers yang sesuai.
+- Gunakan HTTPS di semua environment publik.
+- Sediakan proses penghapusan akun dan data sesuai kebijakan retensi.
+- Uji bahwa user A tidak dapat membaca/mengubah data user B dengan mengubah ID request.
+- Jangan pernah menampilkan error database mentah kepada pengguna.
+
+============================================================
+11. STRUKTUR ROUTE DAN HALAMAN
+============================================================
+
+Route publik:
+- / — landing page
+- /login — login
+- /register — registrasi
+- /forgot-password — reset password
+- /auth/callback — callback OAuth
+- /design-previews — gallery lima konsep visual
+
+Route terlindungi:
+- /app — dashboard/daftar room
+- /app/chats/[conversationId] — ruang chat
+- /app/requests — permintaan chat masuk/keluar
+- /app/contacts — pencarian dan daftar pengguna
+- /app/groups/new — pembuatan grup
+- /app/settings/profile — profil
+- /app/settings/appearance — dark/light/system
+- /app/settings/privacy — privasi
+- /app/settings/notifications — notifikasi
+- /app/settings/security — perangkat/kunci jika E2EE diimplementasikan
+- /app/media/[mediaId] — tampilan media sesuai akses dan masa berlaku
+
+Rancangan layout desktop:
+- Sidebar kiri: logo chatK, pencarian, filter, daftar percakapan, permintaan, profil.
+- Panel tengah: percakapan aktif, header room, pesan, composer.
+- Panel kanan opsional: detail grup/profil/media; dapat ditutup.
+- Header menampilkan nama, avatar, status yang tersedia, dan menu tindakan.
+- Composer mendukung teks, emoji, lampiran, voice note, dan tombol kirim.
+- Semua tindakan penting memiliki focus state dan akses keyboard.
+
+Rancangan mobile:
+- Daftar room menjadi layar utama.
+- Membuka room berpindah ke layar chat dengan tombol kembali.
+- Detail grup/profil memakai halaman atau bottom sheet.
+- Composer tidak tertutup keyboard.
+- Target area sentuh ideal sekitar 44x44 CSS px.
+- Jangan memaksakan layout tiga kolom pada layar sempit.
+
+State UI yang wajib dibuat:
+- loading/skeleton
+- empty state
+- error dan retry
+- offline/reconnecting
+- permission denied
+- upload progress/failure
+- request pending/accepted/rejected
+- no search results
+- message sending/sent/delivered/read/failed
+- media expired/already opened
+- light/dark/system
+- reduced motion
+
+============================================================
+12. DESIGN SYSTEM DAN ANIMASI
+============================================================
+
+Komponen reusable minimum:
+- Button, IconButton, Input, Textarea, Dialog, Dropdown, Tooltip, Toast
+- Avatar, PresenceIndicator, ThemeToggle
+- ConversationListItem, MessageBubble, MessageComposer
+- MessageActions, EmojiReactionPicker, ReplyPreview
+- AttachmentPreview, UploadProgress, VoiceRecorder, VoicePlayer
+- ChatRequestCard, GroupMemberList, SearchResults
+- Skeleton, EmptyState, ErrorState
+
+Design tokens:
+- color.background, surface, surfaceElevated, textPrimary, textSecondary, border, accent, danger, success, warning
+- spacing scale yang konsisten
+- radius scale
+- typography scale
+- shadow/elevation
+- motion duration dan easing
+- focus ring dan z-index scale
+
+Dark/light:
+- Jangan hanya membalik warna secara otomatis.
+- Periksa kontras teks, border, placeholder, tooltip, status, media, dan toast pada kedua tema.
+- Tema system mengikuti preferensi perangkat.
+- Simpan preferensi dan cegah flash tema yang salah saat hydration.
+- Pastikan ilustrasi dan efek glow tetap terbaca di dua mode.
+
+Framer Motion:
+- Gunakan untuk transisi route/panel yang relevan, toast, modal, reaction, dan state feedback.
+- Animasi singkat dan tidak menghalangi input.
+- Hormati prefers-reduced-motion.
+- Jangan menganimasi seluruh daftar pesan secara berat setiap kali event Realtime masuk.
+
+Three.js:
+- Gunakan hanya untuk dekorasi terpilih (misalnya landing hero atau elemen karakter preview).
+- Lazy-load dan pisahkan dari bundle awal chat.
+- Sediakan fallback statis untuk perangkat lemah atau WebGL tidak tersedia.
+- Hentikan render loop saat elemen tidak terlihat.
+- Jangan menggunakan Three.js untuk fungsi penting, pesan, atau navigasi.
+
+============================================================
+13. KINERJA, A11Y, DAN KETAHANAN JARINGAN
+============================================================
+
+- Gunakan pagination/cursor untuk riwayat, bukan mengambil seluruh pesan.
+- Virtualisasi daftar panjang bila terbukti diperlukan.
+- Optimalkan gambar dan thumbnail video.
+- Lazy-load komponen Three.js, preview besar, dan media yang belum terlihat.
+- Hindari subscription Realtime ganda dan selalu unsubscribe saat komponen dilepas.
+- Debounce pencarian dan typing events.
+- Gunakan retry dengan backoff untuk koneksi; hindari retry tanpa batas.
+- Tangani pesan yang datang ketika tab tersembunyi.
+- Sediakan teks alternatif, label ARIA, navigasi keyboard, focus management, dan kontras yang cukup.
+- Semua tindakan penting harus bisa dijalankan tanpa hover.
+- Hormati prefers-reduced-motion dan jangan mengandalkan warna saja untuk menunjukkan status.
+- Uji koneksi lambat, offline, reconnect, dan tab yang lama tidak aktif.
+
+============================================================
+14. LOGGING, ANALYTICS, DAN MONITORING
+============================================================
+
+- Catat error teknis, latency, kegagalan upload, dan status reconnect tanpa isi pesan.
+- Jangan mengirim isi chat, token, password, private key, atau URL signed sensitif ke analytics.
+- Pantau error frontend dan server dengan layanan yang dipilih setelah evaluasi privasi.
+- Pantau batas penggunaan Supabase dan Cloudinary.
+- Gunakan log terstruktur dengan request ID.
+- Sediakan health check/indikator layanan bila relevan.
+- Tentukan kebijakan retensi log dan akses ke log.
+
+============================================================
+15. PENGUJIAN DAN QUALITY GATES
+============================================================
+
+Unit test:
+- Validasi input.
+- Fungsi pembuatan pasangan direct yang kanonis.
+- State pesan dan receipt.
+- Theme preference.
+- Kebijakan view-once dan expiration.
+- Utilitas enkripsi/dekripsi hanya jika menggunakan library/protokol yang dipilih dan telah ditinjau.
+
+Integration test:
+- Registrasi/login/logout.
+- Permintaan chat dan penerimaan.
+- Pembuatan grup dan membership.
+- Kirim/terima pesan dan persistensi.
+- Upload Cloudinary melalui server.
+- Edit/delete/reply/reaction.
+- Read receipts dan notifications.
+- Pagination dan pencarian.
+- RLS: akses yang diizinkan dan penolakan akses yang tidak diizinkan.
+
+End-to-end test:
+- Pengguna A mendaftar dan pengguna B mendaftar.
+- A mengirim request ke B.
+- B menerima request.
+- A mengirim pesan dan B melihatnya tanpa reload.
+- B membalas dan A melihat update.
+- Uji status pesan dan typing.
+- Uji pengiriman gambar dan voice note.
+- Uji view-once: pembukaan kedua ditolak.
+- Uji group chat dengan beberapa akun.
+- Uji dark/light mode.
+- Uji mobile viewport, offline, reconnect, dan logout.
+
+Quality gates sebelum deploy:
+- TypeScript check lulus.
+- Lint lulus.
+- Unit/integration/E2E test kritis lulus.
+- Build production lulus.
+- Tidak ada secret pada bundle browser.
+- RLS test lulus.
+- Tidak ada error kritis console yang diketahui.
+- Review migrasi database dan konfigurasi environment.
+- Review keamanan E2EE sebelum fitur tersebut dipasarkan sebagai aktif.
+
+============================================================
+16. DEPLOYMENT DAN ENVIRONMENT
+============================================================
+
+Environment:
+- Local development.
+- Preview/staging.
+- Production.
+
+Variabel environment (nama ilustratif; sesuaikan SDK):
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY atau publishable key yang sesuai versi SDK
+- SUPABASE_SERVICE_ROLE_KEY (server-only, jika benar-benar diperlukan)
+- CLOUDINARY_CLOUD_NAME
+- CLOUDINARY_API_KEY (server-only bila dipakai untuk signed flow)
+- CLOUDINARY_API_SECRET (server-only, tidak pernah public)
+- variabel tambahan untuk protokol/kunci hanya jika desain keamanan menyatakannya; jangan menyimpan private key pengguna di environment server.
+
+Aturan:
+- Jangan commit file .env.
+- Buat .env.example tanpa nilai rahasia.
+- Konfigurasi semua variabel di Vercel untuk environment yang tepat.
+- Set redirect/callback OAuth untuk local, preview, dan production.
+- Jalankan migrasi secara terkontrol.
+- Pastikan database development tidak berisi data produksi.
+- Uji deployment preview sebelum merge ke branch produksi.
+- Sediakan rollback aplikasi dan prosedur backup/migrasi database.
+- Verifikasi domain HTTPS dan URL callback setelah deployment.
+
+============================================================
+17. RENCANA IMPLEMENTASI BERTAHAP
+============================================================
+
+Tahap 0 — Discovery dan keputusan arsitektur
+- Review tiga repositori referensi.
+- Pilih satu dari lima arah desain sebagai default setelah gallery dibuat.
+- Tentukan kebijakan E2EE, media sekali lihat, retensi, batas upload, dan definisi receipt.
+- Buat threat model dan keputusan teknis singkat (ADR).
+Exit criteria: keputusan penting terdokumentasi; tidak ada klaim E2EE yang belum diimplementasikan.
+
+Tahap 1 — Fondasi proyek
+- Buat proyek Next.js App Router + TypeScript.
+- Setup lint, format, test runner, komponen dasar, design tokens.
+- Setup Supabase project, schema/migrations awal, RLS dasar.
+- Setup Cloudinary dan alur signed upload di server.
+- Setup Vercel preview dan environment variables.
+Exit criteria: build berhasil, autentikasi dasar terhubung, secret aman.
+
+Tahap 2 — Gallery desain dan autentikasi
+- Buat /design-previews dengan Astro, Neko, Raka, Luna, Bumi.
+- Buat preview desktop/mobile dan light/dark.
+- Implementasi register/login/logout, callback OAuth, profil dasar.
+Exit criteria: lima preview bisa dibandingkan; auth berjalan end-to-end.
+
+Tahap 3 — Chat personal dan request
+- Cari pengguna.
+- Kirim/terima/tolak/batalkan request.
+- Buat percakapan direct unik setelah accepted.
+- Buat daftar room dan layar chat.
+Exit criteria: tidak ada chat personal yang terbuka sebelum request disetujui.
+
+Tahap 4 — Pesan real-time dan status
+- Kirim teks, optimistic UI, persistence, pagination.
+- Realtime subscriptions, reconnect, typing, presence.
+- Sent/delivered/read receipts.
+Exit criteria: alur dua akun lulus test tanpa refresh.
+
+Tahap 5 — Grup dan interaksi pesan
+- Buat grup, admin/member, undangan, keluar grup.
+- Reply, edit, delete, emoji reactions.
+- Search pesan sesuai kemampuan privasi/E2EE.
+Exit criteria: RLS dan permission test lulus.
+
+Tahap 6 — Media dan notifikasi
+- Gambar/video/dokumen/voice note.
+- Preview, progress, error handling.
+- View-once image/video dan voice note dengan konsumsi atomik.
+- Toast/in-app notifications dan preferensi.
+Exit criteria: upload aman, akses media tervalidasi, pengulangan view-once ditolak.
+
+Tahap 7 — E2EE, jika sudah diputuskan
+- Implementasikan protokol yang ditinjau.
+- Device identity, distribusi kunci, rotasi, pemulihan, media encryption.
+- Audit perilaku search, notification, group membership, dan lost-device.
+Exit criteria: review keamanan selesai dan batasan dijelaskan sebelum klaim produksi.
+
+Tahap 8 — Hardening dan peluncuran
+- Audit RLS dan izin.
+- Uji aksesibilitas, mobile, performa, offline/reconnect.
+- Setup monitoring, backup, rate limit, kebijakan retensi.
+- Deploy production dan smoke test.
+Exit criteria: seluruh quality gate terpenuhi.
+
+Estimasi awal kasar: 6–10 minggu untuk satu developer berpengalaman, tergantung kedalaman desain, kualitas pengujian, dan terutama keputusan serta implementasi E2EE. Jangan memperlakukan estimasi ini sebagai komitmen tanggal.
+
+============================================================
+18. RISIKO DAN MITIGASI
+============================================================
+
+Risiko: E2EE kompleks dan berpotensi salah implementasi.
+Mitigasi: protokol teruji, threat model, review keamanan, rilis bertahap, klaim fitur yang akurat.
+
+Risiko: Supabase RLS tidak lengkap.
+Mitigasi: matriks akses, test negatif untuk setiap tabel, review kebijakan sebelum produksi.
+
+Risiko: URL Cloudinary dapat dibagikan atau dipakai ulang.
+Mitigasi: gunakan access control yang sesuai, URL/token berumur pendek, uji URL lama, dan jangan menjanjikan perlindungan screenshot.
+
+Risiko: pesan duplikat saat retry.
+Mitigasi: client_message_id dan constraint idempotency.
+
+Risiko: event Realtime bocor ke non-anggota.
+Mitigasi: otorisasi channel, RLS, validasi membership, pengujian akun ketiga yang tidak berhak.
+
+Risiko: Three.js memperlambat chat.
+Mitigasi: lazy-load, fallback statis, batasi ke landing/preview, ukur performa.
+
+Risiko: tema visual mengurangi keterbacaan.
+Mitigasi: audit kontras, uji dark/light, token sistem, dan pengujian pengguna.
+
+Risiko: pesan sekali lihat dianggap tidak bisa disalin.
+Mitigasi: jelaskan batas browser; gunakan konsumsi atomik dan akses sementara, tetapi jangan menjanjikan pencegahan screenshot.
+
+Risiko: biaya media dan database meningkat.
+Mitigasi: batas ukuran, thumbnail, retensi, monitoring penggunaan, dan pagination.
+
+============================================================
+19. KEPUTUSAN YANG HARUS DIKONFIRMASI PEMILIK
+============================================================
+
+Copilot harus menandai hal berikut sebagai keputusan yang perlu disetujui, bukan menebak:
+1. Konsep desain mana yang dipilih sebagai desain utama setelah kelima preview dibuat?
+2. Apakah E2EE wajib pada MVP atau boleh menjadi tahap terpisah? Jangan menyebut E2EE aktif sebelum benar-benar selesai.
+3. Batas ukuran gambar/video/dokumen dan durasi voice note.
+4. Masa kedaluwarsa media sekali lihat dan pesan sementara.
+5. Apakah “hapus untuk semua” tersedia dan apakah edit pesan dibatasi waktu.
+6. Apakah read receipts/last seen dapat dinonaktifkan.
+7. Kebijakan akses riwayat untuk anggota grup baru dan mantan anggota.
+8. Apakah push notification browser masuk MVP atau hanya toast/in-app notification.
+9. Strategi penyimpanan/pemulihan kunci dan multi-device untuk E2EE.
+10. Batas retensi akun, pesan, metadata media, dan log.
+
+Jika keputusan belum tersedia, implementasikan fondasi yang aman, dokumentasikan asumsi, dan jangan mengambil keputusan yang melemahkan privasi secara diam-diam.
+
+============================================================
+20. INSTRUKSI EKSEKUSI UNTUK GITHUB COPILOT
+============================================================
+
+Gunakan PRD ini sebagai spesifikasi produk, bukan instruksi untuk menghasilkan semua fitur sekaligus tanpa pemeriksaan.
+
+Urutan kerja yang diwajibkan:
+1. Periksa repository kerja yang tersedia dan identifikasi struktur yang sudah ada. Jangan menimpa pekerjaan yang ada tanpa memahami konteks.
+2. Baca tiga repository referensi pada bagian 0; catat lisensi, insight desain, dan hal yang tidak dapat dipakai. Ketiga URL tersebut wajib tetap dicantumkan di dokumentasi proyek.
+3. Buat dokumen ringkas keputusan arsitektur dan daftar asumsi terbuka.
+4. Buat rencana implementasi dan checklist tugas kecil yang dapat diverifikasi.
+5. Implementasikan fondasi proyek, autentikasi, database migrations, dan RLS sebelum fitur chat lanjutan.
+6. Buat /design-previews dengan kelima konsep dan kontrol light/dark terlebih dahulu. Gunakan data demo, jangan hubungkan mock preview ke data produksi.
+7. Implementasikan fitur secara bertahap sesuai bagian 17.
+8. Untuk setiap tahap: tulis kode, tambahkan test, jalankan lint/typecheck/test/build, perbaiki kegagalan, lalu rangkum file yang berubah.
+9. Jangan menyimpan secret di frontend, source control, log, atau dokumentasi contoh.
+10. Jangan menggunakan service-role key di browser.
+11. Jangan mengklaim E2EE, view-once, push notification, atau status delivered berfungsi sebelum alur dan pengujiannya benar-benar ada.
+12. Jangan membuat API/SDK palsu. Gunakan API yang sesuai dengan versi dependensi yang dipasang dan periksa dokumentasi resminya.
+13. Hindari satu file komponen raksasa. Gunakan struktur modular berdasarkan fitur.
+14. Jangan membuat migrasi database destruktif tanpa penjelasan dan konfirmasi.
+15. Setelah setiap tahap, berikan ringkasan:
+    - apa yang diimplementasikan;
+    - file penting yang berubah;
+    - environment variables yang dibutuhkan (tanpa nilainya);
+    - migrasi yang ditambahkan;
+    - test yang dijalankan dan hasilnya;
+    - risiko atau keputusan yang masih terbuka.
+16. Jika ada spesifikasi yang saling bertentangan atau memengaruhi keamanan, berhenti dan minta keputusan, jangan menebak.
+17. Pastikan seluruh fitur inti memiliki loading, empty, error, offline, dan permission state yang layak.
+18. Prioritaskan fungsionalitas, aksesibilitas, keamanan, dan performa daripada efek visual.
+
+============================================================
+21. DEFINISI SELESAI (DEFINITION OF DONE)
+============================================================
+
+Sebuah fitur dianggap selesai hanya jika:
+- Alur sukses dan alur gagal telah ditangani.
+- Validasi server dan izin akses tersedia.
+- RLS dan pengujian negatif sesuai kebutuhan.
+- UI responsif, dapat diakses, dan memiliki state loading/empty/error.
+- Tidak membocorkan secret atau data percakapan.
+- Test relevan lulus dan build production berhasil.
+- Dokumentasi setup diperbarui.
+- Tidak ada tombol dummy yang terlihat seperti fitur aktif.
+- Fitur sesuai dengan keputusan privasi dan batasan E2EE.
+- Untuk media sekali lihat, percobaan akses kedua benar-benar ditolak di sisi server.
+- Untuk real-time, dua akun berbeda dapat memverifikasi alur tanpa refresh manual.
+
+AKHIR DOKUMEN PRD
